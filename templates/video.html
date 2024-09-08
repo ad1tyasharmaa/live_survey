@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Color Detected</title>
+    <script>
+        function fetchSkinColor() {
+            fetch('/get_skin_color')
+                .then(response => response.json())
+                .then(data => {
+                    const skinColorElement = document.getElementById('skinColor');
+                    const finalStepButton = document.getElementById('finalStepButton');
+
+                    if (data.skin_color) {
+                        skinColorElement.innerText = data.skin_color;
+                        if (data.skin_color !== 'None') {
+                            finalStepButton.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching skin color:', error));
+        }
+
+        // Poll the skin color every 1 second
+        setInterval(fetchSkinColor, 1000);
+    </script>
+</head>
+<body>
+    <h2>Skin Color Detection Result</h2>
+    <p>Detected Skin Color: <span id="skinColor">None</span></p>
+
+    <h3>Live Video Feed</h3>
+    <img src="{{ url_for('video_feed') }}" alt="Video Feed">
+
+    <form action="/final_step" method="POST">
+        <input id="finalStepButton" type="submit" value="Final Step" disabled>
+    </form>
+</body>
+</html>

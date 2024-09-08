@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Color Detection</title>
+    <script>
+        let currentQuestion = 0;
+        const questions = [
+            { question: "What is your skin type?", options: ["Light", "Medium", "Dark"] },
+            { question: "How often do you use sunscreen?", options: ["Never", "Sometimes", "Always"] },
+            { question: "Do you have any skin allergies?", options: ["Yes", "No"] }
+        ];
+
+        function showNextQuestion() {
+            if (currentQuestion < questions.length) {
+                const questionLabel = document.getElementById('questionLabel');
+                questionLabel.innerText = questions[currentQuestion].question;
+
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+
+                questions[currentQuestion].options.forEach((option, index) => {
+                    const radioOption = `
+                        <input type="radio" id="option${index}" name="answer" value="${option}" required>
+                        <label for="option${index}">${option}</label><br>`;
+                    optionsContainer.innerHTML += radioOption;
+                });
+            }
+        }
+
+        function submitAnswer() {
+            if (currentQuestion < questions.length) {
+                const answer = document.querySelector('input[name="answer"]:checked');
+                if (!answer) {
+                    alert("Please select an answer.");
+                    return;
+                }
+
+                const question = questions[currentQuestion].question;
+                console.log("Submitting answer:", answer.value);
+
+                fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `question=${encodeURIComponent(question)}&answer=${encodeURIComponent(answer.value)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Response from server:", data);
+                    if (data.success) {
+                        currentQuestion++;
+                        if (currentQuestion < questions.length) {
+                            showNextQuestion();
+                        } else {
+                            document.getElementById('questionForm').innerHTML = `
+                                <p>Thank you for completing the form!</p>
+                                <form action="/video" method="POST">
+                                    <input type="submit" value="Start Video Stream">
+                                </form>`;
+                        }
+                    }
+                })
+                .catch(error => console.log(error));
+            } else {
+                window.location.href = '/video';
+            }
+        }
+
+        window.onload = function() {
+            showNextQuestion();
+        }
+    </script>
+</head>
+<body>
+    <h2>Welcome to the Skin Color Detection App!</h2>
+    <form id="questionForm" onsubmit="event.preventDefault(); submitAnswer();">
+        <label id="questionLabel"></label><br><br>
+        <div id="options"></div><br>
+        <input type="submit" value="Next">
+    </form>
+</body>
+</html>
